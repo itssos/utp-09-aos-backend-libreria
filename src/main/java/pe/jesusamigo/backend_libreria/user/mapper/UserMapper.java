@@ -2,11 +2,13 @@ package pe.jesusamigo.backend_libreria.user.mapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import pe.jesusamigo.backend_libreria.persons.person.entity.Person;
 import pe.jesusamigo.backend_libreria.role.entity.Permission;
 import pe.jesusamigo.backend_libreria.role.entity.Role;
 import pe.jesusamigo.backend_libreria.role.service.RoleService;
 import pe.jesusamigo.backend_libreria.user.dto.UserCreateDTO;
 import pe.jesusamigo.backend_libreria.user.dto.UserResponseDTO;
+import pe.jesusamigo.backend_libreria.user.dto.UserShortResponseDTO;
 import pe.jesusamigo.backend_libreria.user.entity.User;
 
 import java.util.stream.Collectors;
@@ -54,4 +56,20 @@ public class UserMapper {
         }
         return user;
     }
+
+    public UserShortResponseDTO toShortDto(User user, Person person) {
+        if (user == null) return null;
+        String fullName = null;
+        if (person != null) {
+            String firstName = person.getFirstName() != null ? person.getFirstName() : "";
+            String lastName = person.getLastName() != null ? person.getLastName() : "";
+            fullName = (firstName + " " + lastName).trim();
+        }
+        return UserShortResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullName(fullName)
+                .build();
+    }
+
 }

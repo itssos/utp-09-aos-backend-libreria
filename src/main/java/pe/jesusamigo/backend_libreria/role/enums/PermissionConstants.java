@@ -53,6 +53,10 @@ public enum PermissionConstants {
     DECREASE_STOCK("DECREASE_STOCK", "Dar de baja stock"),
     GET_PRODUCT_STOCK("GET_PRODUCT_STOCK", "Consultar stock de producto"),
 
+    CREATE_SALE("CREATE_SALE", "Registrar venta"),
+    GET_SALES("GET_SALES", "Listar ventas"),
+    GET_SALE("GET_SALE", "Obtener venta"),
+
     CREATE_ROLE("CREATE_ROLE", "Crear rol"),
     GET_ROLE("GET_ROLE", "Detalle de rol"),
     GET_ROLES("GET_ROLES", "Ver roles"),

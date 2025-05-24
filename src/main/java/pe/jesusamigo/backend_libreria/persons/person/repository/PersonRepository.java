@@ -10,4 +10,6 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     Optional<Person> findByUserUsername(String username);
 
     Optional<Person> findByDni(String documentNumber);
+
+    Optional<Person> findByUserId(Integer id);
 }
