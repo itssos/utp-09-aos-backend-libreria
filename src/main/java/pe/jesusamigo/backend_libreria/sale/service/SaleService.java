@@ -1,6 +1,11 @@
 package pe.jesusamigo.backend_libreria.sale.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.jesusamigo.backend_libreria.product.entity.Product;
@@ -12,6 +17,7 @@ import pe.jesusamigo.backend_libreria.sale.entity.Sale;
 import pe.jesusamigo.backend_libreria.sale.entity.SaleItem;
 import pe.jesusamigo.backend_libreria.sale.mapper.SaleMapper;
 import pe.jesusamigo.backend_libreria.sale.repository.SaleRepository;
+import pe.jesusamigo.backend_libreria.sale.repository.SaleSpecification;
 import pe.jesusamigo.backend_libreria.user.entity.User;
 import pe.jesusamigo.backend_libreria.user.repository.UserRepository;
 
@@ -95,13 +101,6 @@ public class SaleService {
         return saleMapper.toResponseDTO(saved);
     }
 
-    @Transactional(readOnly = true)
-    public List<SaleResponseDTO> findAll() {
-        return saleRepository.findAll()
-                .stream()
-                .map(saleMapper::toResponseDTO)
-                .collect(Collectors.toList());
-    }
 
     @Transactional(readOnly = true)
     public Optional<SaleResponseDTO> findById(Integer id) {
@@ -110,18 +109,26 @@ public class SaleService {
     }
 
     @Transactional(readOnly = true)
-    public List<SaleResponseDTO> findByUserId(Integer userId) {
-        return saleRepository.findByUserId(userId)
-                .stream()
-                .map(saleMapper::toResponseDTO)
-                .collect(Collectors.toList());
+    public Page<SaleResponseDTO> findAllFiltered(
+            Integer userId,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            String sort, // "asc" o "desc"
+            int page,
+            int size
+    ) {
+        Specification<Sale> spec = Specification
+                .where(SaleSpecification.hasUserId(userId))
+                .and(SaleSpecification.dateAfterOrEqual(startDate))
+                .and(SaleSpecification.dateBeforeOrEqual(endDate));
+
+        Sort sortOrder = Sort.by("saleDate");
+        sortOrder = "asc".equalsIgnoreCase(sort) ? sortOrder.ascending() : sortOrder.descending();
+
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        return saleRepository.findAll(spec, pageable)
+                .map(saleMapper::toResponseDTO);
     }
 
-    @Transactional(readOnly = true)
-    public List<SaleResponseDTO> findBySaleDateBetween(LocalDateTime start, LocalDateTime end) {
-        return saleRepository.findBySaleDateBetween(start, end)
-                .stream()
-                .map(saleMapper::toResponseDTO)
-                .collect(Collectors.toList());
-    }
 }

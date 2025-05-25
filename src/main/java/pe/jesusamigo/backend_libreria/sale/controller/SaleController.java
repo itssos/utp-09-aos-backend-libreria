@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,30 +50,30 @@ public class SaleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @GetMapping
-    @PreAuthorize("hasAuthority('GET_SALES')")
     @Operation(
-            summary = "Consultar historial de ventas (opcionalmente por rango de fechas)",
-            description = "Obtiene todas las ventas o solo las del rango [startDate, endDate] si se especifican los parámetros."
+            summary = "Consultar historial de ventas filtrado, paginado y ordenado",
+            description = "Filtra ventas por usuario (opcional), por rango de fechas, y permite paginación y orden por fecha."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Ventas obtenidas correctamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = SaleResponseDTO.class)))
     })
-    public ResponseEntity<List<SaleResponseDTO>> getSales(
-            @Parameter(description = "Fecha inicial (formato: yyyy-MM-dd'T'HH:mm:ss)", example = "2024-05-20T00:00:00")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @Parameter(description = "Fecha final (formato: yyyy-MM-dd'T'HH:mm:ss)", example = "2024-05-23T23:59:59")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
+    @GetMapping
+    @PreAuthorize("hasAuthority('GET_SALES')")
+    public ResponseEntity<Page<SaleResponseDTO>> getSales(
+            @Parameter(description = "ID del usuario vendedor") @RequestParam(required = false) Integer userId,
+            @Parameter(description = "Fecha inicial (yyyy-MM-dd'T'HH:mm:ss)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @Parameter(description = "Fecha final (yyyy-MM-dd'T'HH:mm:ss)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            @Parameter(description = "Ordenar por fecha (asc o desc)", example = "desc") @RequestParam(required = false, defaultValue = "desc") String sort,
+            @Parameter(description = "Número de página (inicia en 0)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de página", example = "20") @RequestParam(defaultValue = "20") int size
     ) {
-        List<SaleResponseDTO> sales;
-        if (startDate != null && endDate != null) {
-            sales = saleService.findBySaleDateBetween(startDate, endDate);
-        } else {
-            sales = saleService.findAll();
-        }
+        Page<SaleResponseDTO> sales = saleService.findAllFiltered(
+                userId, startDate, endDate, sort, page, size
+        );
         return ResponseEntity.ok(sales);
     }
+
 
     @Operation(
             summary = "Obtener venta por ID",
@@ -92,22 +93,5 @@ public class SaleController {
         return saleService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @Operation(
-            summary = "Consultar historial de ventas de un usuario",
-            description = "Obtiene todas las ventas realizadas por un usuario específico."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Historial obtenido correctamente",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = SaleResponseDTO.class)))
-    })
-    @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAuthority('GET_SALES')")
-    public ResponseEntity<List<SaleResponseDTO>> getSalesByUserId(
-            @Parameter(description = "ID del usuario vendedor", example = "7", required = true)
-            @PathVariable Integer userId
-    ) {
-        return ResponseEntity.ok(saleService.findByUserId(userId));
     }
 }
