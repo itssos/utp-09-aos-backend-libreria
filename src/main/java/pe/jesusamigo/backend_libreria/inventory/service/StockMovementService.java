@@ -1,6 +1,11 @@
 package pe.jesusamigo.backend_libreria.inventory.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.jesusamigo.backend_libreria.inventory.dto.StockMovementCreateDTO;
@@ -8,9 +13,12 @@ import pe.jesusamigo.backend_libreria.inventory.dto.StockMovementResponseDTO;
 import pe.jesusamigo.backend_libreria.inventory.entity.StockMovement;
 import pe.jesusamigo.backend_libreria.inventory.mapper.StockMovementMapper;
 import pe.jesusamigo.backend_libreria.inventory.repository.StockMovementRepository;
+import pe.jesusamigo.backend_libreria.inventory.repository.StockMovementSpecification;
 import pe.jesusamigo.backend_libreria.product.entity.Product;
 import pe.jesusamigo.backend_libreria.product.repository.ProductRepository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -100,27 +108,31 @@ public class StockMovementService {
         });
     }
 
-    /**
-     * Lista todos los movimientos de stock.
-     */
     @Transactional(readOnly = true)
-    public List<StockMovementResponseDTO> findAll() {
-        return stockMovementRepository.findAll()
-                .stream()
-                .map(stockMovementMapper::toResponseDTO)
-                .collect(Collectors.toList());
+    public Page<StockMovementResponseDTO> findAllFiltered(
+            Integer productId,
+            StockMovement.MovementType movementType,
+            LocalDateTime fromDate,
+            LocalDateTime toDate,
+            String sort, // "asc" o "desc"
+            int page,
+            int size
+    ) {
+        Specification<StockMovement> spec = Specification
+                .where(StockMovementSpecification.hasProductId(productId))
+                .and(StockMovementSpecification.hasMovementType(movementType))
+                .and(StockMovementSpecification.dateAfterOrEqual(fromDate))
+                .and(StockMovementSpecification.dateBeforeOrEqual(toDate));
+
+        Sort sortOrder = Sort.by("movementDate");
+        sortOrder = "desc".equalsIgnoreCase(sort) ? sortOrder.descending() : sortOrder.ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        return stockMovementRepository.findAll(spec, pageable)
+                .map(stockMovementMapper::toResponseDTO);
     }
 
-    /**
-     * Lista los movimientos de stock de un producto específico.
-     */
-    @Transactional(readOnly = true)
-    public List<StockMovementResponseDTO> findByProductId(Integer productId) {
-        return stockMovementRepository.findByProductId(productId)
-                .stream()
-                .map(stockMovementMapper::toResponseDTO)
-                .collect(Collectors.toList());
-    }
 
     /**
      * Busca un movimiento de stock por su ID.

@@ -9,14 +9,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pe.jesusamigo.backend_libreria.inventory.dto.StockMovementCreateDTO;
 import pe.jesusamigo.backend_libreria.inventory.dto.StockMovementResponseDTO;
+import pe.jesusamigo.backend_libreria.inventory.entity.StockMovement;
 import pe.jesusamigo.backend_libreria.inventory.service.StockMovementService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -68,34 +72,30 @@ public class StockMovementController {
     }
 
     @Operation(
-            summary = "Listar todos los movimientos de stock",
-            description = "Obtiene el historial completo de movimientos de stock registrados."
+            summary = "Listar movimientos de stock con filtros, paginación y orden",
+            description = "Filtra movimientos por producto, tipo (IN/OUT), rango de fechas. Permite paginar y ordenar por fecha."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de movimientos obtenida correctamente",
+            @ApiResponse(responseCode = "200", description = "Página de movimientos obtenida correctamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = StockMovementResponseDTO.class)))
     })
     @GetMapping
     @PreAuthorize("hasAuthority('GET_STOCK_MOVEMENTS')")
-    public ResponseEntity<List<StockMovementResponseDTO>> getAllStockMovements() {
-        return ResponseEntity.ok(stockMovementService.findAll());
+    public ResponseEntity<Page<StockMovementResponseDTO>> getStockMovements(
+            @Parameter(description = "ID del producto") @RequestParam(required = false) Integer productId,
+            @Parameter(description = "Tipo de movimiento (IN/OUT)") @RequestParam(required = false) StockMovement.MovementType movementType,
+            @Parameter(description = "Fecha inicial (yyyy-MM-dd'T'HH:mm:ss)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @Parameter(description = "Fecha final (yyyy-MM-dd'T'HH:mm:ss)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
+            @Parameter(description = "Ordenar por fecha (asc o desc)", example = "desc") @RequestParam(required = false, defaultValue = "desc") String sort,
+            @Parameter(description = "Número de página (inicia en 0)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de página", example = "20") @RequestParam(defaultValue = "20") int size
+    ) {
+        Page<StockMovementResponseDTO> movimientos = stockMovementService.findAllFiltered(
+                productId, movementType, fromDate, toDate, sort, page, size
+        );
+        return ResponseEntity.ok(movimientos);
     }
 
-    @Operation(
-            summary = "Obtener movimientos de stock por producto",
-            description = "Obtiene todos los movimientos de stock registrados para un producto específico."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Movimientos del producto obtenidos correctamente",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = StockMovementResponseDTO.class)))
-    })
-    @GetMapping("/product/{productId}")
-    @PreAuthorize("hasAuthority('GET_STOCK_MOVEMENTS')")
-    public ResponseEntity<List<StockMovementResponseDTO>> getStockMovementsByProduct(
-            @Parameter(description = "ID del producto", example = "1", required = true)
-            @PathVariable Integer productId) {
-        return ResponseEntity.ok(stockMovementService.findByProductId(productId));
-    }
 
     @Operation(
             summary = "Obtener un movimiento de stock por ID",
