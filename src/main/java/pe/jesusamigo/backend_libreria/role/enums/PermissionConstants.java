@@ -57,6 +57,8 @@ public enum PermissionConstants {
     GET_SALES("GET_SALES", "Listar ventas"),
     GET_SALE("GET_SALE", "Obtener venta"),
 
+    REPORTS_VIEW("REPORTS_VIEW","Ver reporte"),
+
     CREATE_ROLE("CREATE_ROLE", "Crear rol"),
     GET_ROLE("GET_ROLE", "Detalle de rol"),
     GET_ROLES("GET_ROLES", "Ver roles"),
