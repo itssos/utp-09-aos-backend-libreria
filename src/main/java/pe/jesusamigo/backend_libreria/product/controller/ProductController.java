@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,11 +20,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.jesusamigo.backend_libreria.product.dto.ProductCreateDTO;
 import pe.jesusamigo.backend_libreria.product.dto.ProductResponseDTO;
 import pe.jesusamigo.backend_libreria.product.service.ProductService;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -53,15 +56,30 @@ public class ProductController {
         }
     }
 
-    @Operation(summary = "Listar todos los productos", description = "Obtiene una lista de todos los productos/libros registrados.")
+    @Operation(
+            summary = "Listar productos con filtros opcionales y paginación",
+            description = "Filtra por categoría, autor, editorial, rango de precios, nombre/título (fragmentos), ordena por precio y soporta paginación."
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de productos obtenida correctamente",
+            @ApiResponse(responseCode = "200", description = "Página de productos obtenida correctamente",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductResponseDTO.class)))
     })
     @GetMapping
-    @PreAuthorize("hasAuthority('GET_PRODUCTS')")
-    public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
-        return ResponseEntity.ok(productService.findAll());
+    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
+            @Parameter(description = "ID de la categoría") @RequestParam(required = false) Integer categoryId,
+            @Parameter(description = "ID de la editorial") @RequestParam(required = false) Integer editorialId,
+            @Parameter(description = "ID del autor") @RequestParam(required = false) Integer authorId,
+            @Parameter(description = "Precio mínimo") @RequestParam(required = false) BigDecimal minPrice,
+            @Parameter(description = "Precio máximo") @RequestParam(required = false) BigDecimal maxPrice,
+            @Parameter(description = "Fragmento del título o nombre") @RequestParam(required = false) String title,
+            @Parameter(description = "Ordenar por precio (asc o desc)", example = "asc") @RequestParam(required = false, defaultValue = "asc") String sort,
+            @Parameter(description = "Número de página (inicia en 0)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de página", example = "20") @RequestParam(defaultValue = "20") int size
+    ) {
+        Page<ProductResponseDTO> products = productService.findAllFiltered(
+                categoryId, editorialId, authorId, minPrice, maxPrice, title, sort, page, size
+        );
+        return ResponseEntity.ok(products);
     }
 
     @Operation(summary = "Obtener producto por ID", description = "Recupera la información de un producto específico usando su ID.")
@@ -71,7 +89,7 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Producto no encontrado", content = @Content)
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('GET_PRODUCT')")
+//    @PreAuthorize("hasAuthority('GET_PRODUCT')")
     public ResponseEntity<ProductResponseDTO> getProductById(
             @Parameter(description = "ID del producto a buscar", example = "1", required = true)
             @PathVariable Integer id) {

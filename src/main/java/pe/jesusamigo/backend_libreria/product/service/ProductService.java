@@ -1,6 +1,11 @@
 package pe.jesusamigo.backend_libreria.product.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.jesusamigo.backend_libreria.product.dto.ProductCreateDTO;
@@ -14,7 +19,9 @@ import pe.jesusamigo.backend_libreria.product.repository.AuthorRepository;
 import pe.jesusamigo.backend_libreria.product.repository.CategoryRepository;
 import pe.jesusamigo.backend_libreria.product.repository.EditorialRepository;
 import pe.jesusamigo.backend_libreria.product.repository.ProductRepository;
+import pe.jesusamigo.backend_libreria.product.repository.ProductSpecification;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -62,6 +69,34 @@ public class ProductService {
                 .stream()
                 .map(productMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponseDTO> findAllFiltered(
+            Integer categoryId,
+            Integer editorialId,
+            Integer authorId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            String title,
+            String sort, // "asc" o "desc"
+            int page,
+            int size
+    ) {
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.hasCategory(categoryId))
+                .and(ProductSpecification.hasEditorial(editorialId))
+                .and(ProductSpecification.hasAuthor(authorId))
+                .and(ProductSpecification.hasPriceBetween(minPrice, maxPrice))
+                .and(ProductSpecification.titleContains(title));
+
+        Sort sortOrder = Sort.by("price");
+        sortOrder = "desc".equalsIgnoreCase(sort) ? sortOrder.descending() : sortOrder.ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        return productRepository.findAll(spec, pageable)
+                .map(productMapper::toResponseDTO);
     }
 
     /**

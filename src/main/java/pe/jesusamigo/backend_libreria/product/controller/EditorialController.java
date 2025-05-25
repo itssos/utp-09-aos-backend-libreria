@@ -56,7 +56,7 @@ public class EditorialController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = EditorialResponseDTO.class)))
     })
     @GetMapping
-    @PreAuthorize("hasAuthority('GET_EDITORIALS')")
+//    @PreAuthorize("hasAuthority('GET_EDITORIALS')")
     public ResponseEntity<List<EditorialResponseDTO>> getAllEditorials() {
         return ResponseEntity.ok(editorialService.findAll());
     }

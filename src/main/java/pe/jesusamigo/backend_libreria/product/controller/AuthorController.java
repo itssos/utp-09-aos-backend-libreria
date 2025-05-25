@@ -55,7 +55,7 @@ public class AuthorController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthorResponseDTO.class)))
     })
     @GetMapping
-    @PreAuthorize("hasAuthority('GET_AUTHORS')")
+//    @PreAuthorize("hasAuthority('GET_AUTHORS')")
     public ResponseEntity<List<AuthorResponseDTO>> getAllAuthors() {
         return ResponseEntity.ok(authorService.findAll());
     }

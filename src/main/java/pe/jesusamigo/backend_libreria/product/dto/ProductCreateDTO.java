@@ -27,7 +27,7 @@ public class ProductCreateDTO {
     public static final int TITLE_MAX_LENGTH       = 120;
     public static final int ISBN_MAX_LENGTH        = 20;
     public static final int CODE_MAX_LENGTH        = 50;
-    public static final int IMAGE_URL_MAX_LENGTH   = 100;
+    public static final int IMAGE_URL_MAX_LENGTH   = 500;
     public static final int DESCRIPTION_MAX_LENGTH = 500;
 
     @Schema(

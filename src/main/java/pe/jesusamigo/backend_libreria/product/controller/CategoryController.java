@@ -55,7 +55,7 @@ public class CategoryController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponseDTO.class)))
     })
     @GetMapping
-    @PreAuthorize("hasAuthority('GET_CATEGORIES')")
+//    @PreAuthorize("hasAuthority('GET_CATEGORIES')")
     public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
         return ResponseEntity.ok(categoryService.findAll());
     }
