@@ -72,6 +72,36 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    public Page<ProductResponseDTO> findAllActiveFiltered(
+            Integer categoryId,
+            Integer editorialId,
+            Integer authorId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            String title,
+            String sort,
+            int page,
+            int size
+    ) {
+        Specification<Product> spec = Specification
+                .where(ProductSpecification.hasCategory(categoryId))
+                .and(ProductSpecification.hasEditorial(editorialId))
+                .and(ProductSpecification.hasAuthor(authorId))
+                .and(ProductSpecification.hasPriceBetween(minPrice, maxPrice))
+                .and(ProductSpecification.titleContains(title))
+                .and(ProductSpecification.isActive(true)); // SOLO productos activos
+
+        Sort sortOrder = Sort.by("price");
+        sortOrder = "desc".equalsIgnoreCase(sort) ? sortOrder.descending() : sortOrder.ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        return productRepository.findAll(spec, pageable)
+                .map(productMapper::toResponseDTO);
+    }
+
+
+    @Transactional(readOnly = true)
     public Page<ProductResponseDTO> findAllFiltered(
             Integer categoryId,
             Integer editorialId,
@@ -150,4 +180,14 @@ public class ProductService {
         }
         return false;
     }
+
+    @Transactional
+    public ProductResponseDTO updateActiveStatus(Integer productId, Boolean active) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro el producto de ID: " + productId));
+        product.setActive(active);
+        productRepository.save(product);
+        return productMapper.toResponseDTO(product);
+    }
+
 }

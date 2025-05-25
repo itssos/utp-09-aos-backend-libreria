@@ -33,6 +33,11 @@ public class ProductSpecification {
         };
     }
 
+    public static Specification<Product> isActive(Boolean active) {
+        return (root, query, cb) -> active == null ? null : cb.equal(root.get("active"), active);
+    }
+
+
     public static Specification<Product> titleContains(String fragment) {
         return (root, query, cb) -> fragment == null || fragment.isBlank()
                 ? null
