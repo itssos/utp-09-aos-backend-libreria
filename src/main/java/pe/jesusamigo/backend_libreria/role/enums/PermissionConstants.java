@@ -13,6 +13,7 @@ public enum PermissionConstants {
     GET_PERSON("GET_PERSON", "Detalle de persona"),
     GET_PERSONS("GET_PERSONS", "Ver personas"),
     DELETE_PERSON("DELETE_PERSON", "Eliminar persona"),
+    UPDATE_PERSON("UPDATE_PERSON", "Actualizar persona"),
 
     GET_PERMISSION("GET_PERMISSION", "Detalle de permiso"),
     GET_PERMISSIONS("GET_PERMISSIONS", "Ver permisos"),

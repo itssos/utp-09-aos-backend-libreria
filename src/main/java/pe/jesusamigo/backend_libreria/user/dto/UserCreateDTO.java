@@ -25,7 +25,7 @@ public class UserCreateDTO {
     @Size(min = 8, max = 255, message = "La contraseña debe tener entre 8 y 255 caracteres.")
     private String password;
 
-    @Schema(description = "Nombre del rol asignado al usuario", example = "DOCENTE", required = true)
+    @Schema(description = "Nombre del rol asignado al usuario", example = "CAJERO", required = true)
     @NotBlank(message = "El rol no puede estar vacío.")
     private String role;
 }

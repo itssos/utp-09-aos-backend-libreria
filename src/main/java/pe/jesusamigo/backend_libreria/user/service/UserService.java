@@ -60,9 +60,11 @@ public class UserService {
         return personRepository.findAll()
                 .stream()
                 .filter(person -> person.getUser() != null)
+                .filter(person -> person.getUser().getId() != 1)
                 .map(person -> userMapper.toShortDto(person.getUser(), person))
                 .collect(Collectors.toList());
     }
+
 
 
 
