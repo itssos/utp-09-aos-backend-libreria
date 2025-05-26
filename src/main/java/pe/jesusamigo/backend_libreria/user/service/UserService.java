@@ -5,10 +5,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.jesusamigo.backend_libreria.exception.ResourceNotFoundException;
+import pe.jesusamigo.backend_libreria.persons.person.repository.PersonRepository;
 import pe.jesusamigo.backend_libreria.role.entity.Role;
 import pe.jesusamigo.backend_libreria.role.repository.RoleRepository;
 import pe.jesusamigo.backend_libreria.user.dto.UserCreateDTO;
 import pe.jesusamigo.backend_libreria.user.dto.UserResponseDTO;
+import pe.jesusamigo.backend_libreria.user.dto.UserShortResponseDTO;
 import pe.jesusamigo.backend_libreria.user.entity.User;
 import pe.jesusamigo.backend_libreria.user.mapper.UserMapper;
 import pe.jesusamigo.backend_libreria.user.repository.UserRepository;
@@ -26,6 +28,7 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final PersonRepository personRepository;
 
     public UserResponseDTO createUser(UserCreateDTO dto) {
         validateNewUser(dto);
@@ -52,6 +55,16 @@ public class UserService {
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
     }
+
+    public List<UserShortResponseDTO> getAllUsersShort() {
+        return personRepository.findAll()
+                .stream()
+                .filter(person -> person.getUser() != null)
+                .map(person -> userMapper.toShortDto(person.getUser(), person))
+                .collect(Collectors.toList());
+    }
+
+
 
     public void deleteUser(Integer id) {
         if (!userRepository.existsById(id)) {

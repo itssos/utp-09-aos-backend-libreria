@@ -46,6 +46,8 @@ public enum PermissionConstants {
     UPDATE_PRODUCT_ACTIVE("UPDATE_PRODUCT_ACTIVE", "Actualizar estado del producto"),
     VIEW_ALL_PRODUCTS("VIEW_ALL_PRODUCTS", "Ver productos"),
 
+    GET_USERS("GET_USERS", "Ver usuarios"),
+
     CREATE_STOCK_MOVEMENT("CREATE_STOCK_MOVEMENT", "Crear movimiento de stock"),
     UPDATE_STOCK_MOVEMENT("UPDATE_STOCK_MOVEMENT", "Actualizar movimiento de stock"),
     GET_STOCK_MOVEMENTS("GET_STOCK_MOVEMENTS", "Listar movimientos de stock"),
